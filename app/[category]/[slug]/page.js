@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { FooterSimple, WhatsappFloat } from "@/components/Footer";
-import ProductDetailView from "@/components/ProductDetailView";
 import ProductCard from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/products";
 import { getProductBySlug, subscribeProducts } from "@/lib/firestoreProducts";
