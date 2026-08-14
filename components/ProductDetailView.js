@@ -84,7 +84,7 @@ export default function ProductDetailView({ product }) {
         </div>
 
         
-          href={getOrderWhatsappLink(product, { weight, qty })}
+         <a href={getOrderWhatsappLink(product, { weight, qty })}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-outline pd-order-direct"
