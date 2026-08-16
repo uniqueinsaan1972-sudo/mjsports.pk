@@ -1,6 +1,5 @@
 import "./globals.css";
-import { CartProvider } from "@/components/CartContext";
-import { AuthProvider } from "@/components/AuthContext";
+import Providers from "./providers";
 
 export const metadata = {
   title: "MJ Sports | Premium Cricket Gear",
@@ -18,9 +17,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="mj">
-        <AuthProvider>
-          <CartProvider>{children}</CartProvider>
-        </AuthProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

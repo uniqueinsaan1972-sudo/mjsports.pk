@@ -30,7 +30,7 @@ export function CartProvider({ children }) {
       if (existing) {
         return prev.map((i) => (i.key === key ? { ...i, qty: i.qty + qty } : i));
       }
-      return [...prev, { key, slug: product.slug, name: product.name, price: product.price, weight, qty, grad: product.grad }];
+    return [...prev, { key, slug: product.slug, name: product.name, price: product.price, weight, qty, grad: product.grad, thumbnail: product.thumbnail }];
     });
     showToast(`${product.name} added to cart`);
   }, [showToast]);

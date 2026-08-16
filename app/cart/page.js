@@ -19,7 +19,7 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    const link = getCartOrderWhatsappLink(items, { discount, total, couponCode: coupon?.code });
+    const link = getCartWhatsappLink(items, { subtotal, discount, total, coupon });
     window.open(link, "_blank", "noopener,noreferrer");
     clearCart();
   };
@@ -46,11 +46,20 @@ export default function CartPage() {
             <div className="cart-items">
               {items.map((i) => (
                 <div key={i.key} className="cart-item">
-                  <div className="cart-item-thumb" style={{ background: `linear-gradient(160deg, ${i.grad[0]}, ${i.grad[1]})` }}>
-                    <svg viewBox="0 0 60 140">
-                      <rect x="24" y="4" width="10" height="55" rx="5" fill="#7a4a22" />
-                      <path d="M18 60 Q18 110 30 136 Q42 110 42 60 Z" fill="#e8c48a" />
-                    </svg>
+                  <div
+                    className="cart-item-thumb"
+                    style={
+                      i.thumbnail
+                        ? { backgroundImage: `url(${i.thumbnail})`, backgroundSize: "cover", backgroundPosition: "center" }
+                        : { background: `linear-gradient(160deg, ${i.grad[0]}, ${i.grad[1]})` }
+                    }
+                  >
+                    {!i.thumbnail && (
+                      <svg viewBox="0 0 60 140">
+                        <rect x="24" y="4" width="10" height="55" rx="5" fill="#7a4a22" />
+                        <path d="M18 60 Q18 110 30 136 Q42 110 42 60 Z" fill="#e8c48a" />
+                      </svg>
+                    )}
                   </div>
                   <div className="cart-item-info">
                     <h4>{i.name}</h4>

@@ -2,6 +2,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ProductDetailView from "@/components/ProductDetailView";
 import Navbar from "@/components/Navbar";
 import { FooterSimple, WhatsappFloat } from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -57,11 +58,6 @@ export default function ProductPage({ params }) {
           </div>
         </section>
       )}
-      <ScrollFadeUp>
-  <section className="section" id="categories">
-    ...same content...
-  </section>
-</ScrollFadeUp>
       <FooterSimple />
       <WhatsappFloat />
     </>
