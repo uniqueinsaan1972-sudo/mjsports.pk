@@ -136,7 +136,7 @@ export default function ProductDetailView({ product }) {
         </div>
 
         {/* WhatsApp Direct Links */}
-        
+        <a
           href={getOrderWhatsappLink(product, { weight, qty })}
           target="_blank"
           rel="noopener noreferrer"
@@ -145,7 +145,7 @@ export default function ProductDetailView({ product }) {
           &#128172; Order This Directly via WhatsApp
         </a>
 
-        
+        <a
           href={getInquiryWhatsappLink(product)}
           target="_blank"
           rel="noopener noreferrer"
