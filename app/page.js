@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import { FooterFull, WhatsappFloat } from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { subscribeProducts } from "@/lib/firestoreProducts";
+import SocialSection from "@/components/SocialSection";
 import { getGeneralWhatsappLink } from "@/lib/whatsapp";
 
 export default function Home() {
@@ -186,6 +187,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+      </ScrollFadeUp>
+
+      <ScrollFadeUp>
+        <SocialSection />
       </ScrollFadeUp>
 
       <ScrollFadeUp>
