@@ -14,6 +14,7 @@ import {
 } from "@/lib/firestoreProducts";
 import { uploadProductImagesToCloudinary } from "@/lib/cloudinaryUpload";
 import { subscribeCategories, addCategory, deleteCategory } from "@/lib/firestoreCategories";
+import CouponManager from "@/components/CouponManager";
 
 const EMPTY_FORM = { title: "", price: "", discount: "", description: "", category: "Bats", featured: false, variants: [] };
 const MAX_IMAGES = 6;
@@ -318,11 +319,17 @@ export default function AdminPanel() {
         >
           {editingId ? "Edit Product" : "Add Product"}
         </button>
-        <button
+                <button
           className={tab === "categories" ? "active" : ""}
           onClick={() => setTab("categories")}
         >
           Categories
+        </button>
+        <button
+          className={tab === "coupons" ? "active" : ""}
+          onClick={() => setTab("coupons")}
+        >
+          Coupons
         </button>
       </div>
 
@@ -991,13 +998,15 @@ export default function AdminPanel() {
                       onClick={() => handleDeleteCategory(cat)}
                     >
                       Delete
-                    </button>
+                   </button>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {tab === "coupons" && <CouponManager />}
       </div>
     </div>
   );
