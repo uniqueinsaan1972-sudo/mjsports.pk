@@ -23,14 +23,30 @@ export function CartProvider({ children }) {
     timerRef.current = setTimeout(() => setToast(null), 5000);
   }, []);
 
-  const addItem = useCallback((product, qty = 1, weight = null) => {
+  const addItem = useCallback((product, qty = 1, variants = {}) => {
     setItems((prev) => {
-      const key = `${product.slug}-${weight || "default"}`;
+      const variantKey = Object.entries(variants || {})
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([k, v]) => `${k}:${v}`)
+        .join("|");
+      const key = `${product.slug}-${variantKey || "default"}`;
       const existing = prev.find((i) => i.key === key);
       if (existing) {
         return prev.map((i) => (i.key === key ? { ...i, qty: i.qty + qty } : i));
       }
-    return [...prev, { key, slug: product.slug, name: product.name, price: product.price, weight, qty, grad: product.grad, thumbnail: product.thumbnail }];
+      return [
+        ...prev,
+        {
+          key,
+          slug: product.slug,
+          name: product.name,
+          price: product.price,
+          variants: variants || {},
+          qty,
+          grad: product.grad,
+          thumbnail: product.thumbnail,
+        },
+      ];
     });
     showToast(`${product.name} added to cart`);
   }, [showToast]);

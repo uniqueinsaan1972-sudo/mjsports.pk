@@ -1,36 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getOrderWhatsappLink, getInquiryWhatsappLink } from "@/lib/whatsapp";
 import { useCart } from "@/components/CartContext";
+import { subscribeProducts } from "@/lib/firestoreProducts";
+import ProductCard from "@/components/ProductCard";
 
 export default function ProductDetailView({ product }) {
   if (!product) return null;
 
-  const { name, willow, price = 0, old, description, specs, grad, thumbnail, images } = product;
+  const { name, willow, price = 0, old, description, specs, grad, thumbnail, images, category, id } = product;
 
-  // Safe fallback for grad array to prevent undefined error crashes
   const bgGrad = Array.isArray(grad) && grad.length >= 2 ? grad : ["#1a1a1a", "#2a2a2a"];
-
-  // Gallery images: use the images array if present, otherwise fall back to a single thumbnail
   const gallery = Array.isArray(images) && images.length > 0 ? images : thumbnail ? [thumbnail] : [];
 
   const [activeImage, setActiveImage] = useState(0);
 
-  const weights = specs?.weights?.length ? specs.weights : null;
-  const [weight, setWeight] = useState(weights ? weights[0] : null);
+  const productVariants = Array.isArray(product.variants) ? product.variants : [];
+  const [selectedVariants, setSelectedVariants] = useState(() => {
+    const initial = {};
+    productVariants.forEach((v) => {
+      if (v.options && v.options.length) initial[v.name] = v.options[0];
+    });
+    return initial;
+  });
+
   const [qty, setQty] = useState(1);
   const { addItem } = useCart();
 
-  // Never show a negative price on screen even if bad data slips through
   const safePrice = Math.max(0, price || 0);
 
-  const renderImage = (src, className) =>
+  const [related, setRelated] = useState([]);
+  useEffect(() => {
+    const unsub = subscribeProducts((all) => {
+      const filtered = all.filter((p) => p.category === category && p.id !== id).slice(0, 4);
+      setRelated(filtered);
+    });
+    return () => unsub();
+  }, [category, id]);
+
+  const renderImage = (src, alt) =>
     src ? (
       <img
         src={src}
-        alt={name || "Product Image"}
-        className={className}
+        alt={alt || "Product Image"}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
       />
     ) : (
@@ -41,14 +54,23 @@ export default function ProductDetailView({ product }) {
     );
 
   return (
-    <div className="pd-layout">
-      {/* Gallery Section */}
+    <div className="pd-stack">
+
+      <div className="pd-top-title">
+        {willow && <div className="cat-name">{willow}</div>}
+        <h1 className="pd-title">{name}</h1>
+        <div className="pd-price-row">
+          <span className="pd-price">Rs {safePrice.toLocaleString()}</span>
+          {old && <span className="pd-old-price">Rs {old.toLocaleString()}</span>}
+        </div>
+      </div>
+
       <div className="pd-gallery">
         <div
           className="pd-main-image"
           style={{ background: `linear-gradient(160deg, ${bgGrad[0]}, ${bgGrad[1]})` }}
         >
-          {renderImage(gallery[activeImage])}
+          {renderImage(gallery[activeImage], name)}
         </div>
         {gallery.length > 1 && (
           <div className="pd-thumbs">
@@ -60,100 +82,101 @@ export default function ProductDetailView({ product }) {
                 style={{
                   background: `linear-gradient(160deg, ${bgGrad[0]}, ${bgGrad[1]})`,
                   cursor: "pointer",
-                  outline: activeImage === i ? "2px solid var(--accent, #eab308)" : "2px solid transparent",
+                  outline: activeImage === i ? "2px solid var(--gold)" : "2px solid transparent",
                   outlineOffset: "-2px",
                   borderRadius: 8,
                   overflow: "hidden",
                 }}
               >
-                {renderImage(img)}
+                {renderImage(img, name)}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Info Section */}
-      <div className="pd-info">
-        {willow && <div className="cat-name">{willow}</div>}
-        <h1 className="pd-title">{name}</h1>
-
-        <div className="pd-price-row">
-          <span className="pd-price">Rs {safePrice.toLocaleString()}</span>
-          {old && <span className="pd-old-price">Rs {old?.toLocaleString()}</span>}
+      {productVariants.map((v) => (
+        <div className="pd-variant-block" key={v.name}>
+          <h4>{v.name}</h4>
+          <div className="pd-variant-row">
+            {v.options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                className={`pd-variant-opt ${selectedVariants[v.name] === opt ? "active" : ""}`}
+                onClick={() => setSelectedVariants((s) => ({ ...s, [v.name]: opt }))}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
         </div>
+      ))}
 
-        {description && <p className="pd-desc">{description}</p>}
-
-        {/* Weights Variant */}
-        {weights && (
-          <div className="pd-variant-block">
-            <h4>Weight</h4>
-            <div className="pd-variant-row">
-              {weights.map((w) => (
-                <button
-                  key={w}
-                  className={`pd-variant-opt ${weight === w ? "active" : ""}`}
-                  onClick={() => setWeight(w)}
-                  type="button"
-                >
-                  {w}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Specifications */}
-        {specs && (specs.handle !== "-" || specs.edge !== "-") && (
-          <div className="pd-specs">
-            {specs.handle && specs.handle !== "-" && (
-              <div><span>Handle</span><b>{specs.handle}</b></div>
-            )}
-            {specs.edge && specs.edge !== "-" && (
-              <div><span>Edge</span><b>{specs.edge}</b></div>
-            )}
-            {specs.playerType && (
-              <div><span>Player Type</span><b>{specs.playerType}</b></div>
-            )}
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="pd-action-row">
-          <div className="pd-qty">
-            <button type="button" onClick={() => setQty(Math.max(1, qty - 1))}>&minus;</button>
-            <span>{qty}</span>
-            <button type="button" onClick={() => setQty(qty + 1)}>+</button>
-          </div>
-          <button
-            type="button"
-            className="btn-primary pd-add-btn"
-            onClick={() => addItem(product, qty, weight)}
-          >
-            Add to Cart
-          </button>
+      {specs && (specs.handle !== "-" || specs.edge !== "-") && (
+        <div className="pd-specs">
+          {specs.handle && specs.handle !== "-" && (
+            <div><span>Handle</span><b>{specs.handle}</b></div>
+          )}
+          {specs.edge && specs.edge !== "-" && (
+            <div><span>Edge</span><b>{specs.edge}</b></div>
+          )}
+          {specs.playerType && (
+            <div><span>Player Type</span><b>{specs.playerType}</b></div>
+          )}
         </div>
+      )}
 
-        {/* WhatsApp Direct Links */}
-        <a
-          href={getOrderWhatsappLink(product, { weight, qty })}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-outline pd-order-direct"
+      <div className="pd-action-row">
+        <div className="pd-qty">
+          <button type="button" onClick={() => setQty(Math.max(1, qty - 1))}>&minus;</button>
+          <span>{qty}</span>
+          <button type="button" onClick={() => setQty(qty + 1)}>+</button>
+        </div>
+        <button
+          type="button"
+          className="btn-primary pd-add-btn"
+          onClick={() => addItem(product, qty, selectedVariants)}
         >
-          &#128172; Order This Directly via WhatsApp
-        </a>
-
-        <a
-          href={getInquiryWhatsappLink(product)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="pd-whatsapp-link"
-        >
-          &#128172; Ask a question about this product
-        </a>
+          Add to Cart
+        </button>
       </div>
+
+      <a
+        href={getOrderWhatsappLink(product, { variants: selectedVariants, qty })}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-outline pd-order-direct"
+      >
+        &#128172; Order This Directly via WhatsApp
+      </a>
+
+      <a
+        href={getInquiryWhatsappLink(product)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="pd-whatsapp-link"
+      >
+        &#128172; Ask a question about this product
+      </a>
+
+      {description && (
+        <div className="pd-desc-block">
+          <h4>Description</h4>
+          <p className="pd-desc" style={{ marginBottom: 0 }}>{description}</p>
+        </div>
+      )}
+
+      {related.length > 0 && (
+        <div className="pd-related">
+          <h3>You Might Also Like</h3>
+          <div className="product-grid">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} category={p.category} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

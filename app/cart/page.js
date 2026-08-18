@@ -6,21 +6,45 @@ import Navbar from "@/components/Navbar";
 import { FooterSimple, WhatsappFloat } from "@/components/Footer";
 import { useCart } from "@/components/CartContext";
 import { getCartWhatsappLink } from "@/lib/whatsapp";
+import { incrementCouponUsage } from "@/lib/firestoreCoupons";
 
 export default function CartPage() {
   const { items, removeItem, updateQty, applyCoupon, coupon, subtotal, discount, total, clearCart } = useCart();
   const [couponInput, setCouponInput] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
+  const [applying, setApplying] = useState(false);
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!couponInput.trim()) return;
-    const ok = applyCoupon(couponInput);
-    setCouponMsg(ok ? `Coupon applied — ${couponInput.trim().toUpperCase()}` : "Invalid coupon code");
+    setApplying(true);
+
+    const result = await applyCoupon(couponInput);
+
+    if (result === "ok") {
+      setCouponMsg(`Coupon applied — ${couponInput.trim().toUpperCase()}`);
+    } else if (result === "limit") {
+      setCouponMsg("This coupon has reached its usage limit");
+    } else if (result === "error") {
+      setCouponMsg("Something went wrong, try again");
+    } else {
+      setCouponMsg("Invalid coupon code");
+    }
+
+    setApplying(false);
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     const link = getCartWhatsappLink(items, { subtotal, discount, total, coupon });
     window.open(link, "_blank", "noopener,noreferrer");
+
+    if (coupon) {
+      try {
+        await incrementCouponUsage(coupon.code);
+      } catch (err) {
+        console.error("Failed to increment coupon usage:", err);
+      }
+    }
+
     clearCart();
   };
 
@@ -63,7 +87,28 @@ export default function CartPage() {
                   </div>
                   <div className="cart-item-info">
                     <h4>{i.name}</h4>
-                    {i.weight && <div className="willow-tag">Weight: {i.weight}</div>}
+
+                    {i.variants && Object.keys(i.variants).length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "6px 0" }}>
+                        {Object.entries(i.variants).map(([k, v]) => (
+                          <span
+                            key={k}
+                            style={{
+                              background: "rgba(217,164,65,0.15)",
+                              color: "var(--gold-soft)",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: "3px 9px",
+                              borderRadius: 20,
+                              border: "1px solid rgba(217,164,65,0.3)",
+                            }}
+                          >
+                            {k}: {v}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="cart-item-row">
                       <div className="pd-qty">
                         <button onClick={() => updateQty(i.key, i.qty - 1)}>&minus;</button>
@@ -87,7 +132,9 @@ export default function CartPage() {
                   onChange={(e) => setCouponInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleApply()}
                 />
-                <button onClick={handleApply}>Apply</button>
+                <button onClick={handleApply} disabled={applying}>
+                  {applying ? "Checking..." : "Apply"}
+                </button>
               </div>
               {couponMsg && <p className="coupon-msg">{couponMsg}</p>}
 

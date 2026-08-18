@@ -15,7 +15,7 @@ import {
 import { uploadProductImagesToCloudinary } from "@/lib/cloudinaryUpload";
 import { subscribeCategories, addCategory, deleteCategory } from "@/lib/firestoreCategories";
 
-const EMPTY_FORM = { title: "", price: "", discount: "", description: "", category: "Bats", featured: false };
+const EMPTY_FORM = { title: "", price: "", discount: "", description: "", category: "Bats", featured: false, variants: [] };
 const MAX_IMAGES = 6;
 
 export default function AdminPanel() {
@@ -34,6 +34,7 @@ export default function AdminPanel() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [newCategory, setNewCategory] = useState("");
+  const [optionDraft, setOptionDraft] = useState({});
 
   const allCategoryNames = [...BASE_CATEGORIES.map((c) => c.label), ...customCategories];
   const totalImages = existingImages.length + newFiles.length;
@@ -70,6 +71,7 @@ export default function AdminPanel() {
     setForm(EMPTY_FORM);
     setNewFiles([]);
     setExistingImages([]);
+    setOptionDraft({});
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -84,6 +86,7 @@ export default function AdminPanel() {
       description: product.description || "",
       category: product.category,
       featured: !!product.featured,
+      variants: product.variants || [],
     });
     setExistingImages(
       product.images && product.images.length
@@ -93,6 +96,7 @@ export default function AdminPanel() {
         : []
     );
     setNewFiles([]);
+    setOptionDraft({});
     if (fileInputRef.current) fileInputRef.current.value = "";
     setTab("add");
   }
@@ -130,7 +134,37 @@ export default function AdminPanel() {
     }
   }
 
-  // MAIN SAVE FUNCTION - FIXED
+  // ===== VARIANT BUILDER HELPERS =====
+  function addVariantType() {
+    setForm((f) => ({ ...f, variants: [...f.variants, { name: "", options: [] }] }));
+  }
+  function updateVariantName(idx, name) {
+    setForm((f) => {
+      const variants = [...f.variants];
+      variants[idx] = { ...variants[idx], name };
+      return { ...f, variants };
+    });
+  }
+  function addVariantOption(idx, optionText) {
+    if (!optionText.trim()) return;
+    setForm((f) => {
+      const variants = [...f.variants];
+      variants[idx] = { ...variants[idx], options: [...variants[idx].options, optionText.trim()] };
+      return { ...f, variants };
+    });
+  }
+  function removeVariantOption(vIdx, oIdx) {
+    setForm((f) => {
+      const variants = [...f.variants];
+      variants[vIdx] = { ...variants[vIdx], options: variants[vIdx].options.filter((_, i) => i !== oIdx) };
+      return { ...f, variants };
+    });
+  }
+  function removeVariantType(idx) {
+    setForm((f) => ({ ...f, variants: f.variants.filter((_, i) => i !== idx) }));
+  }
+
+  // MAIN SAVE FUNCTION
   async function handleSave(e) {
     e.preventDefault();
 
@@ -152,10 +186,14 @@ export default function AdminPanel() {
       // Combine old and new images
       const finalImages = [...existingImages, ...uploadedUrls].slice(0, MAX_IMAGES);
 
+      // Only keep variant types that have a name AND at least one option
+      const cleanVariants = form.variants.filter((v) => v.name.trim() && v.options.length > 0);
+
       // Prepare product data
       const productData = {
         ...form,
         images: finalImages,
+        variants: cleanVariants,
       };
 
       // Save to Firestore
@@ -669,6 +707,171 @@ export default function AdminPanel() {
                 )}
               </div>
 
+              {/* ===== VARIANTS SECTION (Size / Colour / Weight / Length — optional) ===== */}
+              <div
+                style={{
+                  background: "var(--panel-2)",
+                  padding: 16,
+                  borderRadius: 8,
+                  marginBottom: 20,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 12,
+                  }}
+                >
+                  <label style={{ margin: 0, fontSize: 13.5, fontWeight: 500 }}>
+                    Variants (Optional) — Size, Colour, Weight, Length etc.
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addVariantType}
+                    style={{
+                      background: "var(--accent)",
+                      color: "#fff",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: 4,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    + Add Variant Type
+                  </button>
+                </div>
+
+                {form.variants.map((v, vIdx) => (
+                  <div
+                    key={vIdx}
+                    style={{
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      padding: 12,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                      <input
+                        type="text"
+                        placeholder="Variant name e.g. Size"
+                        value={v.name}
+                        onChange={(e) => updateVariantName(vIdx, e.target.value)}
+                        style={{
+                          flex: 1,
+                          background: "var(--panel-1)",
+                          border: "1px solid var(--line)",
+                          color: "var(--off)",
+                          padding: "8px 10px",
+                          borderRadius: 6,
+                          fontSize: 13,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVariantType(vIdx)}
+                        style={{
+                          background: "none",
+                          border: "1px solid var(--line)",
+                          color: "#e57373",
+                          borderRadius: 6,
+                          padding: "0 10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    {v.options.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                        {v.options.map((opt, oIdx) => (
+                          <span
+                            key={oIdx}
+                            style={{
+                              background: "var(--panel-1)",
+                              border: "1px solid var(--line)",
+                              borderRadius: 20,
+                              padding: "5px 10px",
+                              fontSize: 12,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            {opt}
+                            <button
+                              type="button"
+                              onClick={() => removeVariantOption(vIdx, oIdx)}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                color: "var(--muted)",
+                                cursor: "pointer",
+                                fontSize: 14,
+                                lineHeight: 1,
+                              }}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input
+                        type="text"
+                        placeholder="e.g. Small, or Red, or 900g"
+                        value={optionDraft[vIdx] || ""}
+                        onChange={(e) =>
+                          setOptionDraft((d) => ({ ...d, [vIdx]: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addVariantOption(vIdx, optionDraft[vIdx] || "");
+                            setOptionDraft((d) => ({ ...d, [vIdx]: "" }));
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          background: "var(--panel-1)",
+                          border: "1px solid var(--line)",
+                          color: "var(--off)",
+                          padding: "8px 10px",
+                          borderRadius: 6,
+                          fontSize: 13,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addVariantOption(vIdx, optionDraft[vIdx] || "");
+                          setOptionDraft((d) => ({ ...d, [vIdx]: "" }));
+                        }}
+                        style={{
+                          background: "var(--panel-1)",
+                          border: "1px solid var(--line)",
+                          color: "var(--off)",
+                          borderRadius: 6,
+                          padding: "0 14px",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          fontWeight: 600,
+                        }}
+                      >
+                        + Add Option
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               <label className="filter-opt" style={{ marginBottom: 20, marginTop: 6 }}>
                 <input
                   type="checkbox"
@@ -798,4 +1001,4 @@ export default function AdminPanel() {
       </div>
     </div>
   );
-} 
+}
