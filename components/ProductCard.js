@@ -2,11 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartContext";
+import { useFavourites } from "@/components/FavouritesContext";
 
 export default function ProductCard({ product, category = "Bats" }) {
   const router = useRouter();
   const { addItem } = useCart();
-  const { name, willow, price, old, badge, grad, slug, thumbnail } = product;
+  const { isFavourite, toggleFavourite } = useFavourites();
+  const { name, willow, price, old, badge, grad, slug, thumbnail, id } = product;
+
+  const favourited = isFavourite(id);
 
   const goToProduct = () => {
     if (slug) router.push(`/bats/${slug}`);
@@ -23,7 +27,16 @@ export default function ProductCard({ product, category = "Bats" }) {
         }
       >
         {badge && <span className={`badge ${badge === "New" ? "gold" : ""}`}>{badge}</span>}
-        <span className="wishlist">&#9825;</span>
+        <button
+          className={`wishlist ${favourited ? "active" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavourite(id);
+          }}
+          aria-label={favourited ? "Remove from favourites" : "Add to favourites"}
+        >
+          {favourited ? "\u2764" : "\u2661"}
+        </button>
         {!thumbnail && (
           <svg viewBox="0 0 60 140">
             <rect x="24" y="4" width="10" height="55" rx="5" fill="#7a4a22" />

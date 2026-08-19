@@ -2,12 +2,15 @@
 
 import { CartProvider } from "@/components/CartContext";
 import { AuthProvider } from "@/components/AuthContext";
+import { FavouritesProvider } from "@/components/FavouritesContext";
 
 export default function Providers({ children }) {
   return (
     <AuthProvider>
       <CartProvider>
-        {children}
+        <FavouritesProvider>
+          {children}
+        </FavouritesProvider>
       </CartProvider>
     </AuthProvider>
   );

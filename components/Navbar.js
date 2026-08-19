@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import { useCart } from "@/components/CartContext";
@@ -11,13 +11,26 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [liveProducts, setLiveProducts] = useState([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     const unsub = subscribeProducts(setLiveProducts);
     return () => unsub();
   }, []);
 
-const allProducts = liveProducts;
+  // Close the 3-dot menu when clicking outside of it
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  const allProducts = liveProducts;
   const results =
     query.trim().length > 0
       ? allProducts.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6)
@@ -50,6 +63,19 @@ const allProducts = liveProducts;
               </span>
             )}
           </Link>
+
+          <div style={{ position: "relative" }} ref={menuRef}>
+            <button className="icon-btn" aria-label="More options" onClick={() => setMenuOpen(!menuOpen)}>
+              &#8942;
+            </button>
+            {menuOpen && (
+              <div className="nav-dropdown">
+                <Link href="/about" onClick={() => setMenuOpen(false)}>MJ Sports Story</Link>
+                <Link href="/contact" onClick={() => setMenuOpen(false)}>Contact Us</Link>
+                <Link href="/favourites" onClick={() => setMenuOpen(false)}>Favourites</Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
