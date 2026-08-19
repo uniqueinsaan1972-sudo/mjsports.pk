@@ -144,6 +144,10 @@ export default function CartPage() {
               )}
               <div className="summary-row total"><span>Total</span><b>Rs {total.toLocaleString()}</b></div>
 
+              <div className="admin-note" style={{ marginTop: 16, marginBottom: 4 }}>
+                ⚠️ Hum abhi Cash on Delivery (COD) offer nahi kar rahe — hamara COD wala koi account nahi hai jis wajah se agar hum COD par order bhejte hain to rider payment nahi dete, jis se humein loss hota hai. Is liye apna order poora karne ke liye advance payment karein. Is takleef ke liye maazrat.
+              </div>
+
               <button className="btn-primary checkout-btn" onClick={handleCheckout}>
                 &#128172; Place Order via WhatsApp
               </button>
