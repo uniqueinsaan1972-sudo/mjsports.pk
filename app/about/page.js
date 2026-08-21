@@ -21,7 +21,7 @@ export default function AboutPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 24, color: "var(--muted)", fontSize: 15, lineHeight: 1.9 }}>
 
           <p>
-            MJ Sports was founded in <b style={{ color: "var(--off)" }}>2024 in Sialkot, Pakistan</b> — a city known worldwide for its cricket gear craftsmanship. Our founder, <b style={{ color: "var(--off)" }}>Muhammad Junaid</b>, widely known as <b style={{ color: "var(--off)" }}>&quot;Meer Sahab,&quot;</b> built MJ Sports from the ground up with a simple promise: genuine quality, backed by a real replacement guarantee.
+            MJ Sports was founded in <b style={{ color: "var(--off)" }}>2024 in Sialkot, Pakistan</b> — a city known worldwide for its cricket gear craftsmanship. Our founder, <b style={{ color: "var(--off)" }}>Muhammad Javed</b>, widely known as <b style={{ color: "var(--off)" }}>&quot;Meer Sahab,&quot;</b> built MJ Sports from the ground up with a simple promise: genuine quality, backed by a real replacement guarantee.
           </p>
 
           <p>
