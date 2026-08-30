@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /*.json$
+Disallow: /*?*
+Allow: /?*sort=
+Allow: /?*filter=
+
+Sitemap: https://www.mjsports.pk/sitemap.xml
+Sitemap: https://www.mjsports.pk/sitemap-products.xml
