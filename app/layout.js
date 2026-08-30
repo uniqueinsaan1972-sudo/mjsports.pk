@@ -60,6 +60,17 @@ export default function RootLayout({ children }) {
         />
         {/* Canonical URL */}
         <link rel="canonical" href="https://www.mjsports.pk" />
+        
+        {/* Google Analytics */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WIJGQNGEDRL"></script>
+        <script>
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-WIJGQNGEDRL');
+          `}
+        </script>
       </head>
       <body className="mj">
         <Providers>{children}</Providers>
