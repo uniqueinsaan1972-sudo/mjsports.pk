@@ -3,160 +3,332 @@
 import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { FooterSimple, WhatsappFloat } from "@/components/Footer";
+import { FooterFull, WhatsappFloat } from "@/components/Footer";
 import { useCart } from "@/components/CartContext";
-import { getCartWhatsappLink } from "@/lib/whatsapp";
-import { incrementCouponUsage } from "@/lib/firestoreCoupons";
+import { getCheckoutWhatsappLink, getInquiryWhatsappLink } from "@/lib/whatsapp";
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, applyCoupon, coupon, subtotal, discount, total, clearCart } = useCart();
-  const [couponInput, setCouponInput] = useState("");
-  const [couponMsg, setCouponMsg] = useState("");
-  const [applying, setApplying] = useState(false);
+  const { items, removeItem, updateQty, applyCoupon, coupon, subtotal, discount, deliveryFee, deliveryMethod, setDeliveryMethod, total } = useCart();
+  const [couponCode, setCouponCode] = useState("");
+  const [couponError, setCouponError] = useState("");
 
-  const handleApply = async () => {
-    if (!couponInput.trim()) return;
-    setApplying(true);
-
-    const result = await applyCoupon(couponInput);
-
-    if (result === "ok") {
-      setCouponMsg(`Coupon applied — ${couponInput.trim().toUpperCase()}`);
-    } else if (result === "limit") {
-      setCouponMsg("This coupon has reached its usage limit");
-    } else if (result === "error") {
-      setCouponMsg("Something went wrong, try again");
+  function handleApplyCoupon() {
+    if (!couponCode.trim()) {
+      setCouponError("Enter a coupon code");
+      return;
+    }
+    if (applyCoupon(couponCode)) {
+      setCouponError("");
+      setCouponCode("");
     } else {
-      setCouponMsg("Invalid coupon code");
+      setCouponError("Invalid coupon code");
     }
-
-    setApplying(false);
-  };
-
-  const handleCheckout = async () => {
-    const link = getCartWhatsappLink(items, { subtotal, discount, total, coupon });
-    window.open(link, "_blank", "noopener,noreferrer");
-
-    if (coupon) {
-      try {
-        await incrementCouponUsage(coupon.code);
-      } catch (err) {
-        console.error("Failed to increment coupon usage:", err);
-      }
-    }
-
-    clearCart();
-  };
+  }
 
   return (
     <>
-      <Navbar active="" />
+      <Navbar active="Cart" />
 
-      <div className="page-hero" style={{ paddingBottom: 14 }}>
-        <div className="wrap">
-          <div className="crumb"><Link href="/">Home</Link> / <span>Your Cart</span></div>
-          <h1>Your Cart</h1>
+      <div className="wrap" style={{ paddingTop: 40, paddingBottom: 60 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 30 }}>
+          <Link href="/" style={{ color: "var(--accent)", textDecoration: "none" }}>Home</Link>
+          <span style={{ color: "var(--muted)" }}>/</span>
+          <span>Your Cart</span>
         </div>
-      </div>
 
-      <div className="wrap" style={{ paddingTop: 40, paddingBottom: 80 }}>
+        <h1 style={{ fontSize: 32, marginBottom: 30 }}>Your Cart</h1>
+
         {items.length === 0 ? (
-          <div className="cart-empty">
-            <p>Your cart is empty.</p>
-            <Link href="/bats" className="btn-primary">Shop Bats</Link>
+          <div style={{ textAlign: "center", paddingTop: 60, paddingBottom: 60 }}>
+            <div style={{ fontSize: 48, marginBottom: 20 }}>🛒</div>
+            <h2 style={{ fontSize: 20, marginBottom: 10 }}>Your cart is empty</h2>
+            <p style={{ color: "var(--muted)", marginBottom: 30 }}>
+              Start shopping to add items to your cart.
+            </p>
+            <Link href="/bats" className="btn-primary" style={{ display: "inline-block", padding: "12px 28px" }}>
+              Continue Shopping
+            </Link>
           </div>
         ) : (
-          <div className="cart-layout">
-            <div className="cart-items">
-              {items.map((i) => (
-                <div key={i.key} className="cart-item">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 30, marginBottom: 40 }}>
+            {/* Cart Items */}
+            <div>
+              {items.map((item) => (
+                <div
+                  key={item.key}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "80px 1fr 100px",
+                    gap: 20,
+                    alignItems: "center",
+                    padding: 20,
+                    borderBottom: "1px solid var(--line)",
+                  }}
+                >
+                  {/* Thumbnail */}
                   <div
-                    className="cart-item-thumb"
-                    style={
-                      i.thumbnail
-                        ? { backgroundImage: `url(${i.thumbnail})`, backgroundSize: "cover", backgroundPosition: "center" }
-                        : { background: `linear-gradient(160deg, ${i.grad[0]}, ${i.grad[1]})` }
-                    }
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      background: "var(--panel-2)",
+                    }}
                   >
-                    {!i.thumbnail && (
-                      <svg viewBox="0 0 60 140">
-                        <rect x="24" y="4" width="10" height="55" rx="5" fill="#7a4a22" />
-                        <path d="M18 60 Q18 110 30 136 Q42 110 42 60 Z" fill="#e8c48a" />
-                      </svg>
+                    {item.thumbnail ? (
+                      <img
+                        src={item.thumbnail}
+                        alt={item.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        📦
+                      </div>
                     )}
                   </div>
-                  <div className="cart-item-info">
-                    <h4>{i.name}</h4>
 
-                    {i.variants && Object.keys(i.variants).length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "6px 0" }}>
-                        {Object.entries(i.variants).map(([k, v]) => (
-                          <span
-                            key={k}
-                            style={{
-                              background: "rgba(217,164,65,0.15)",
-                              color: "var(--gold-soft)",
-                              fontSize: 11,
-                              fontWeight: 700,
-                              padding: "3px 9px",
-                              borderRadius: 20,
-                              border: "1px solid rgba(217,164,65,0.3)",
-                            }}
-                          >
-                            {k}: {v}
-                          </span>
-                        ))}
-                      </div>
+                  {/* Info */}
+                  <div>
+                    <p style={{ fontWeight: 600, marginBottom: 6 }}>{item.name}</p>
+                    {Object.keys(item.variants).length > 0 && (
+                      <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>
+                        {Object.entries(item.variants)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(" • ")}
+                      </p>
                     )}
+                    <p style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>
+                      Rs {item.price.toLocaleString()}
+                    </p>
+                  </div>
 
-                    <div className="cart-item-row">
-                      <div className="pd-qty">
-                        <button onClick={() => updateQty(i.key, i.qty - 1)}>&minus;</button>
-                        <span>{i.qty}</span>
-                        <button onClick={() => updateQty(i.key, i.qty + 1)}>+</button>
-                      </div>
-                      <span className="price">Rs {(i.price * i.qty).toLocaleString()}</span>
-                      <button className="cart-remove" onClick={() => removeItem(i.key)}>Remove</button>
+                  {/* Qty + Remove */}
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", marginBottom: 10 }}>
+                      <button
+                        onClick={() => updateQty(item.key, item.qty - 1)}
+                        style={{
+                          width: 28,
+                          height: 28,
+                          border: "1px solid var(--line)",
+                          borderRadius: 4,
+                          background: "var(--panel-2)",
+                          color: "var(--off)",
+                          cursor: "pointer",
+                          fontSize: 14,
+                        }}
+                      >
+                        −
+                      </button>
+                      <span style={{ width: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {item.qty}
+                      </span>
+                      <button
+                        onClick={() => updateQty(item.key, item.qty + 1)}
+                        style={{
+                          width: 28,
+                          height: 28,
+                          border: "1px solid var(--line)",
+                          borderRadius: 4,
+                          background: "var(--panel-2)",
+                          color: "var(--off)",
+                          cursor: "pointer",
+                          fontSize: 14,
+                        }}
+                      >
+                        +
+                      </button>
                     </div>
+                    <button
+                      onClick={() => removeItem(item.key)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#e57373",
+                        cursor: "pointer",
+                        fontSize: 12,
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="cart-summary">
-              <h3>Order Summary</h3>
-              <div className="coupon-row">
-                <input
-                  placeholder="Coupon code"
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleApply()}
-                />
-                <button onClick={handleApply} disabled={applying}>
-                  {applying ? "Checking..." : "Apply"}
-                </button>
-              </div>
-              {couponMsg && <p className="coupon-msg">{couponMsg}</p>}
+            {/* Order Summary */}
+            <div
+              style={{
+                background: "var(--panel-2)",
+                padding: 20,
+                borderRadius: 12,
+                height: "fit-content",
+              }}
+            >
+              <h3 style={{ fontSize: 16, marginBottom: 20, fontWeight: 600 }}>Order Summary</h3>
 
-              <div className="summary-row"><span>Subtotal</span><b>Rs {subtotal.toLocaleString()}</b></div>
-              {discount > 0 && (
-                <div className="summary-row discount"><span>Discount</span><b>&minus;Rs {discount.toLocaleString()}</b></div>
+              {/* Coupon Section */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value);
+                      setCouponError("");
+                    }}
+                    placeholder="Coupon code"
+                    style={{
+                      flex: 1,
+                      background: "var(--panel-1)",
+                      border: "1px solid var(--line)",
+                      color: "var(--off)",
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      fontSize: 12,
+                    }}
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    style={{
+                      background: "var(--accent)",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 14px",
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Apply
+                  </button>
+                </div>
+                {couponError && <p style={{ fontSize: 11, color: "#e57373" }}>{couponError}</p>}
+                {coupon && <p style={{ fontSize: 11, color: "var(--accent)" }}>✓ {coupon.code} applied</p>}
+              </div>
+
+              {/* ✅ FIXED: Delivery Method - Professional Options */}
+              <div style={{ marginBottom: 20, padding: 12, background: "var(--panel-1)", borderRadius: 8 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}>Delivery Method</p>
+                <label style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8, cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="delivery"
+                    checked={deliveryMethod === "pickup"}
+                    onChange={() => setDeliveryMethod("pickup")}
+                  />
+                  <span style={{ fontSize: 13 }}>🏪 Come to Our Shop (Free)</span>
+                </label>
+                <label style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="delivery"
+                    checked={deliveryMethod === "home"}
+                    onChange={() => setDeliveryMethod("home")}
+                  />
+                  <span style={{ fontSize: 13 }}>🚚 Home Delivery (+Rs 700)</span>
+                </label>
+              </div>
+
+              {/* Price Breakdown */}
+              <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13 }}>
+                  <span>Subtotal</span>
+                  <span>Rs {subtotal.toLocaleString()}</span>
+                </div>
+                {discount > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13, color: "var(--accent)" }}>
+                    <span>Discount ({coupon.code})</span>
+                    <span>−Rs {discount.toLocaleString()}</span>
+                  </div>
+                )}
+                {deliveryFee > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, fontSize: 13, color: "var(--accent)" }}>
+                    <span>Delivery Fee</span>
+                    <span>+Rs {deliveryFee.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Total */}
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700, marginBottom: 20 }}>
+                <span>Total</span>
+                <span>Rs {total.toLocaleString()}</span>
+              </div>
+
+              {/* ✅ FIXED: Conditional message based on delivery method */}
+              {deliveryMethod === "pickup" ? (
+                <a
+                  href={getCheckoutWhatsappLink(items, {
+                    subtotal,
+                    discount,
+                    deliveryFee,
+                    deliveryMethod,
+                    total,
+                    coupon,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "12px",
+                    background: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    textAlign: "center",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 13,
+                  }}
+                >
+                  ✓ Confirm Pickup Order
+                </a>
+              ) : (
+                <a
+                  href={getCheckoutWhatsappLink(items, {
+                    subtotal,
+                    discount,
+                    deliveryFee,
+                    deliveryMethod,
+                    total,
+                    coupon,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "12px",
+                    background: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    textAlign: "center",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 13,
+                  }}
+                >
+                  🚚 Confirm Home Delivery Order
+                </a>
               )}
-              <div className="summary-row total"><span>Total</span><b>Rs {total.toLocaleString()}</b></div>
 
-              <div className="admin-note" style={{ marginTop: 16, marginBottom: 4 }}>
-                ⚠️ Hum abhi Cash on Delivery (COD) offer nahi kar rahe — hamara COD wala koi account nahi hai jis wajah se agar hum COD par order bhejte hain to rider payment nahi dete, jis se humein loss hota hai. Is liye apna order poora karne ke liye advance payment karein. Is takleef ke liye maazrat.
-              </div>
-
-              <button className="btn-primary checkout-btn" onClick={handleCheckout}>
-                &#128172; Place Order via WhatsApp
-              </button>
+              <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 12, textAlign: "center" }}>
+                Safe & Secure Checkout
+              </p>
             </div>
           </div>
         )}
       </div>
 
-      <FooterSimple />
+      <FooterFull />
       <WhatsappFloat />
     </>
   );

@@ -7,20 +7,27 @@ import { useCart } from "@/components/CartContext";
 export default function ProductDetailView({ product }) {
   if (!product) return null;
 
-  const { name, willow, price = 0, old, description, specs, grad, thumbnail } = product;
+  const { name, willow, price = 0, old, description, specs, grad, images, thumbnail } = product;
 
-  // Safe fallback for grad array to prevent undefined error crashes
+  // ✅ FIXED: Safe fallback for grad array
   const bgGrad = Array.isArray(grad) && grad.length >= 2 ? grad : ["#1a1a1a", "#2a2a2a"];
 
+  // ✅ FIXED: Use images array if available, fallback to thumbnail
+  const allImages = images && images.length > 0 ? images : thumbnail ? [thumbnail] : [];
+  const [mainImage, setMainImage] = useState(allImages[0] || null);
+  
+  // ✅ FIXED: Variants from new structure
+  const [selectedVariants, setSelectedVariants] = useState({});
+  
   const weights = specs?.weights?.length ? specs.weights : null;
   const [weight, setWeight] = useState(weights ? weights[0] : null);
   const [qty, setQty] = useState(1);
   const { addItem } = useCart();
 
-  const image = (className) =>
-    thumbnail ? (
+  const image = (src, className) =>
+    src ? (
       <img
-        src={thumbnail}
+        src={src}
         alt={name || "Product Image"}
         className={className}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -32,6 +39,14 @@ export default function ProductDetailView({ product }) {
       </svg>
     );
 
+  // ✅ FIXED: Handle variant selection
+  function selectVariant(variantName, option) {
+    setSelectedVariants((prev) => ({ ...prev, [variantName]: option }));
+  }
+
+  // Combine selected variants for cart
+  const allSelectedVariants = weight ? { Weight: weight, ...selectedVariants } : selectedVariants;
+
   return (
     <div className="pd-layout">
       {/* Gallery Section */}
@@ -40,19 +55,29 @@ export default function ProductDetailView({ product }) {
           className="pd-main-image"
           style={{ background: `linear-gradient(160deg, ${bgGrad[0]}, ${bgGrad[1]})` }}
         >
-          {image()}
+          {image(mainImage)}
         </div>
-        <div className="pd-thumbs">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="pd-thumb"
-              style={{ background: `linear-gradient(160deg, ${bgGrad[0]}, ${bgGrad[1]})` }}
-            >
-              {image()}
-            </div>
-          ))}
-        </div>
+        
+        {/* ✅ FIXED: Show all images as thumbnails, not hardcoded 3x repeat */}
+        {allImages.length > 0 && (
+          <div className="pd-thumbs">
+            {allImages.map((img, i) => (
+              <div
+                key={i}
+                className={`pd-thumb ${mainImage === img ? "active" : ""}`}
+                onClick={() => setMainImage(img)}
+                style={{ 
+                  background: `linear-gradient(160deg, ${bgGrad[0]}, ${bgGrad[1]})`,
+                  cursor: "pointer",
+                  opacity: mainImage === img ? 1 : 0.6,
+                  transition: "opacity 0.2s ease"
+                }}
+              >
+                {image(img)}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Info Section */}
@@ -67,7 +92,7 @@ export default function ProductDetailView({ product }) {
 
         {description && <p className="pd-desc">{description}</p>}
 
-        {/* Weights Variant */}
+        {/* ✅ FIXED: Old Weight variant */}
         {weights && (
           <div className="pd-variant-block">
             <h4>Weight</h4>
@@ -83,6 +108,29 @@ export default function ProductDetailView({ product }) {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ✅ FIXED: New Variants from product.variants */}
+        {product.variants && product.variants.length > 0 && (
+          <div>
+            {product.variants.map((variantType, idx) => (
+              <div key={idx} className="pd-variant-block">
+                <h4>{variantType.name}</h4>
+                <div className="pd-variant-row">
+                  {variantType.options.map((option) => (
+                    <button
+                      key={option}
+                      className={`pd-variant-opt ${selectedVariants[variantType.name] === option ? "active" : ""}`}
+                      onClick={() => selectVariant(variantType.name, option)}
+                      type="button"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -111,7 +159,7 @@ export default function ProductDetailView({ product }) {
           <button
             type="button"
             className="btn-primary pd-add-btn"
-            onClick={() => addItem(product, qty, weight)}
+            onClick={() => addItem(product, qty, allSelectedVariants)}
           >
             Add to Cart
           </button>
@@ -119,7 +167,7 @@ export default function ProductDetailView({ product }) {
 
         {/* WhatsApp Direct Links */}
         <a
-          href={getOrderWhatsappLink(product, { weight, qty })}
+          href={getOrderWhatsappLink(product, { ...allSelectedVariants, qty })}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-outline pd-order-direct"

@@ -5,16 +5,20 @@ import Link from "next/link";
 
 const CartContext = createContext(null);
 
-// Simple coupon table — later this can move to Firestore so you can manage codes from admin.
+// Simple coupon table
 const COUPONS = {
   MJ10: 0.10,
   WELCOME5: 0.05,
 };
 
+// ✅ FIXED: Delivery fee constant
+const DELIVERY_FEE = 700; // Rs 700
+
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [toast, setToast] = useState(null);
   const [coupon, setCoupon] = useState(null);
+  const [deliveryMethod, setDeliveryMethod] = useState("pickup"); // "pickup" | "home"
   const timerRef = useRef(null);
 
   const showToast = useCallback((message) => {
@@ -53,7 +57,11 @@ export function CartProvider({ children }) {
 
   const removeItem = (key) => setItems((prev) => prev.filter((i) => i.key !== key));
   const updateQty = (key, qty) => setItems((prev) => prev.map((i) => (i.key === key ? { ...i, qty: Math.max(1, qty) } : i)));
-  const clearCart = () => { setItems([]); setCoupon(null); };
+  const clearCart = () => { 
+    setItems([]); 
+    setCoupon(null); 
+    setDeliveryMethod("pickup");
+  };
 
   const applyCoupon = (code) => {
     const upper = code.trim().toUpperCase();
@@ -67,12 +75,30 @@ export function CartProvider({ children }) {
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const discount = coupon ? Math.round(subtotal * coupon.rate) : 0;
-  const total = subtotal - discount;
+  
+  // ✅ FIXED: Conditional delivery fee (free for pickup, 700 for home delivery)
+  const deliveryFee = deliveryMethod === "home" ? DELIVERY_FEE : 0;
+  const total = subtotal - discount + deliveryFee;
   const count = items.reduce((sum, i) => sum + i.qty, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, clearCart, applyCoupon, coupon, subtotal, discount, total, count }}
+      value={{ 
+        items, 
+        addItem, 
+        removeItem, 
+        updateQty, 
+        clearCart, 
+        applyCoupon, 
+        coupon, 
+        subtotal, 
+        discount, 
+        deliveryFee,
+        deliveryMethod,
+        setDeliveryMethod,
+        total, 
+        count 
+      }}
     >
       {children}
       <div className={`mj-toast ${toast ? "show" : ""}`}>

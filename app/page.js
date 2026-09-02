@@ -6,16 +6,35 @@ import Navbar from "@/components/Navbar";
 import { FooterFull, WhatsappFloat } from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { subscribeProducts } from "@/lib/firestoreProducts";
+import { subscribeCategories } from "@/lib/firestoreCategories";
+import { CATEGORIES as BASE_CATEGORIES } from "@/lib/products";
 import SocialSection from "@/components/SocialSection";
 import { getGeneralWhatsappLink } from "@/lib/whatsapp";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [customCategories, setCustomCategories] = useState([]);
+  
   useEffect(() => {
     const unsub = subscribeProducts(setProducts);
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    const unsub = subscribeCategories(setCustomCategories);
+    return () => unsub();
+  }, []);
+
   const featured = products.filter((p) => p.featured).slice(0, 4);
+
+  // ✅ FIXED: Combine base + custom categories from Firestore
+  const allCategories = [
+    ...BASE_CATEGORIES,
+    ...customCategories.map((name) => ({ 
+      label: name, 
+      slug: name.toLowerCase().replace(/\s+/g, "-") 
+    })),
+  ];
 
   return (
     <>
@@ -78,24 +97,30 @@ export default function Home() {
               <p>From match-ready bats to matching caps &mdash; all in one place.</p>
             </div>
             <div className="cat-grid">
-              <Link href="/bats" className="cat-card">
-                <div className="ic">&#127955;</div><h3>Cricket Bats</h3><span className="count">English &amp; Kashmir Willow</span>
-              </Link>
-              <Link href="/caps" className="cat-card">
-                <div className="ic">&#128081;</div><h3>Caps &amp; Hats</h3><span className="count">Team &amp; Casual Styles</span>
-              </Link>
-              <Link href="/kit-bags" className="cat-card">
-                <div className="ic">&#127959;</div><h3>Kit Bags</h3><span className="count">Duffel &amp; Wheelie</span>
-              </Link>
-              <Link href="/gloves" className="cat-card">
-                <div className="ic">&#129508;</div><h3>Gloves</h3><span className="count">Batting &amp; Wicket Keeping</span>
-              </Link>
-              <Link href="/balls" className="cat-card">
-                <div className="ic">&#9917;</div><h3>Balls</h3><span className="count">Tape, Hard &amp; Tennis</span>
-              </Link>
-              <Link href="/apparel" className="cat-card">
-                <div className="ic">&#128100;</div><h3>Apparel</h3><span className="count">Jerseys &amp; Trousers</span>
-              </Link>
+              {/* ✅ FIXED: Dynamic categories - base + custom from Firestore */}
+              {allCategories.map((cat) => {
+                const categoryEmojis = {
+                  "Bats": "🏏",
+                  "Caps": "🎩",
+                  "Kit Bags": "🎒",
+                  "Gloves": "🧤",
+                  "Balls": "⚾",
+                  "Apparel": "👤",
+                };
+                const emoji = categoryEmojis[cat.label] || "📦";
+                const href = `/${cat.slug}`;
+                const productCount = products.filter((p) => p.category === cat.label).length;
+                
+                return (
+                  <Link key={cat.slug} href={href} className="cat-card">
+                    <div className="ic">{emoji}</div>
+                    <h3>{cat.label}</h3>
+                    <span className="count">
+                      {productCount} {productCount === 1 ? 'product' : 'products'}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
