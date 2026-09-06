@@ -9,7 +9,6 @@ export const metadata = {
   creator: "MJ Sports",
   publisher: "MJ Sports",
   
-  // Open Graph Tags (Social Media Share)
   openGraph: {
     title: "MJ Sports | Premium Cricket Gear",
     description: "Discover high-quality cricket bats, caps, gloves, and sports equipment. Direct from Sialkot.",
@@ -27,7 +26,6 @@ export const metadata = {
     type: "website",
   },
   
-  // Twitter Card Tags
   twitter: {
     card: "summary_large_image",
     title: "MJ Sports | Premium Cricket Gear",
@@ -35,7 +33,6 @@ export const metadata = {
     images: ["https://www.mjsports.pk/og-image.jpg"],
   },
   
-  // Robots & Indexing
   robots: {
     index: true,
     follow: true,
@@ -58,19 +55,44 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
-        {/* Canonical URL */}
         <link rel="canonical" href="https://www.mjsports.pk" />
         
         {/* Google Analytics */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WIJGQNGEDRL"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WIJZGNQEDRL"></script>
         <script>
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-WIJGQNGEDRL');
+            gtag('config', 'G-WIJZGNQEDRL');
           `}
         </script>
+        
+        {/* Organization Schema Markup */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "MJ Sports",
+              "url": "https://www.mjsports.pk",
+              "logo": "https://www.mjsports.pk/og-image.jpg",
+              "description": "Premium cricket equipment from Sialkot, Pakistan",
+              "image": "https://www.mjsports.pk/og-image.jpg",
+              "sameAs": [
+                "https://www.facebook.com/mjsports",
+                "https://www.instagram.com/mjsports",
+                "https://www.tiktok.com/@mjsports"
+              ],
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Sialkot",
+                "addressCountry": "PK"
+              }
+            })
+          }}
+        />
       </head>
       <body className="mj">
         <Providers>{children}</Providers>
