@@ -1,55 +1,104 @@
-'use client';
+"use client";
+import { useState } from "react";
+import { CATEGORIES } from "@/lib/products";
+import styles from "@/styles/admin.module.css";
 
-import { use, useEffect, useState } from 'react';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import { FooterSimple, WhatsappFloat } from '@/components/Footer';
-import ProductCard from '@/components/ProductCard';
-import { CATEGORIES } from '@/lib/products';
-import { subscribeProducts } from '@/lib/firestoreProducts';
+export default function ManageCategories() {
+  const [categories, setCategories] = useState(CATEGORIES);
+  const [editing, setEditing] = useState(null);
+  const [editLabel, setEditLabel] = useState("");
 
-export default function CategoryPage({ params }) {
-  const { category } = use(params);
-  const catInfo = CATEGORIES.find((c) => c.slug === category);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const toggleVisible = (slug) => {
+    setCategories(
+      categories.map((cat) =>
+        cat.slug === slug ? { ...cat, visible: !cat.visible } : cat
+      )
+    );
+  };
 
-  useEffect(() => {
-    const unsub = subscribeProducts((all) => {
-      setProducts(all.filter((p) => p.category === catInfo?.label));
-      setLoading(false);
-    });
-    return () => unsub();
-  }, [catInfo]);
+  const startEdit = (cat) => {
+    setEditing(cat.slug);
+    setEditLabel(cat.label);
+  };
 
-  if (!catInfo) return <div>Category not found</div>;
+  const saveEdit = (slug) => {
+    setCategories(
+      categories.map((cat) =>
+        cat.slug === slug ? { ...cat, label: editLabel } : cat
+      )
+    );
+    setEditing(null);
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setEditLabel("");
+  };
 
   return (
-    <>
-      <Navbar active={catInfo.label} />
-      <div className="page-hero" style={{ paddingBottom: 14 }}>
-        <div className="wrap">
-          <div className="crumb">
-            <Link href="/">Home</Link> / <span>{catInfo.label}</span>
+    <div className={styles.adminPanel}>
+      <h1>Manage Categories</h1>
+      
+      <div className={styles.categoriesList}>
+        {categories.map((cat) => (
+          <div key={cat.slug} className={styles.categoryItem}>
+            {editing === cat.slug ? (
+              <>
+                <input
+                  type="text"
+                  value={editLabel}
+                  onChange={(e) => setEditLabel(e.target.value)}
+                  className={styles.input}
+                />
+                <button
+                  onClick={() => saveEdit(cat.slug)}
+                  className={styles.btnSave}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className={styles.btnCancel}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <div className={styles.catInfo}>
+                  <h3>{cat.label}</h3>
+                  <p>{cat.slug}</p>
+                </div>
+
+                <div className={styles.catActions}>
+                  <button
+                    onClick={() => startEdit(cat)}
+                    className={styles.btnEdit}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => toggleVisible(cat.slug)}
+                    className={cat.visible ? styles.btnHide : styles.btnShow}
+                  >
+                    {cat.visible ? "Hide" : "Show"}
+                  </button>
+
+                  <span className={cat.visible ? styles.statusLive : styles.statusHidden}>
+                    {cat.visible ? "🟢 Live" : "🔴 Hidden"}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
-        </div>
+        ))}
       </div>
-      <div className="wrap" style={{ paddingTop: 40, paddingBottom: 70 }}>
-        <h1>{catInfo.label}</h1>
-        {loading ? (
-          <p style={{ color: 'var(--muted)' }}>Loading...</p>
-        ) : products.length > 0 ? (
-          <div className="product-grid">
-            {products.map((p) => (
-              <ProductCard key={p.slug} product={p} category={catInfo.label} />
-            ))}
-          </div>
-        ) : (
-          <p style={{ color: 'var(--muted)' }}>No products found</p>
-        )}
+
+      <div className={styles.note}>
+        <p>💡 Hidden categories won't appear on the public website.</p>
+        <p>⚠️ Note: Changes are preview only. Update `lib/products.js` to save permanently.</p>
       </div>
-      <FooterSimple />
-      <WhatsappFloat />
-    </>
+    </div>
   );
 }

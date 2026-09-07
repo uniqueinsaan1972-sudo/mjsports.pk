@@ -1,0 +1,113 @@
+.adminPanel {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.categoriesList {
+  margin-top: 20px;
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  margin-bottom: 10px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.catInfo h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+}
+
+.catInfo p {
+  margin: 0;
+  color: #888;
+  font-size: 12px;
+}
+
+.catActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.input {
+  padding: 8px 12px;
+  background: #222;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btnEdit,
+.btnHide,
+.btnShow,
+.btnSave,
+.btnCancel {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.btnEdit {
+  background: #666;
+  color: #fff;
+}
+
+.btnHide {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.btnShow {
+  background: #4caf50;
+  color: #fff;
+}
+
+.btnSave {
+  background: #2196f3;
+  color: #fff;
+}
+
+.btnCancel {
+  background: #666;
+  color: #fff;
+}
+
+.statusLive {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: #1a4d1a;
+  border-radius: 4px;
+  color: #4caf50;
+}
+
+.statusHidden {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: #4d1a1a;
+  border-radius: 4px;
+  color: #d32f2f;
+}
+
+.note {
+  margin-top: 30px;
+  padding: 15px;
+  background: #1a3a1a;
+  border-left: 4px solid #4caf50;
+  color: #ccc;
+  font-size: 12px;
+}
+
+.note p {
+  margin: 5px 0;
+}
