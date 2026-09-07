@@ -839,3 +839,138 @@ body {
 .mj .wishlist{cursor:pointer;border:none;transition:color .2s, transform .15s;}
 .mj .wishlist:active{transform:scale(0.9);}
 .mj .wishlist.active{color:#e0574f;}
+/* ===== ADMIN CATEGORIES MANAGEMENT ===== */
+
+.adminPanel {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.adminPanel h1 {
+  color: #d4af37;
+  margin-bottom: 20px;
+  font-size: 28px;
+}
+
+.categoriesList {
+  margin-top: 20px;
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  margin-bottom: 12px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+.editRow {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 12px;
+  background: #222;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.catInfo h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.slug {
+  margin: 0;
+  color: #888;
+  font-size: 12px;
+}
+
+.catActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btnEdit,
+.btnPrivate,
+.btnLive,
+.btnSave,
+.btnCancel {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.btnEdit {
+  background: #666;
+  color: #fff;
+}
+
+.btnPrivate {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.btnLive {
+  background: #4caf50;
+  color: #fff;
+}
+
+.btnSave {
+  background: #2196f3;
+  color: #fff;
+}
+
+.btnCancel {
+  background: #666;
+  color: #fff;
+}
+
+.statusLive {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: #1a4d1a;
+  color: #4caf50;
+  border-radius: 4px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.statusPrivate {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: #4d1a1a;
+  color: #d32f2f;
+  border-radius: 4px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.note {
+  margin-top: 20px;
+  padding: 15px;
+  background: #1a2a1a;
+  border-left: 4px solid #4caf50;
+  color: #ccc;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.note p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
