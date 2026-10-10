@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Only the shop owner's Firebase account can change anything.
+    // Add more UIDs inside the list if another person needs admin access.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in ['DHHbVhpd15agsQqnrD8KAIyo65w2'];
+    }
+
+    // Public catalogue: anyone can read, only the admin can write.
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Coupons: a visitor can look up one code (needed at checkout) but cannot list them all.
+    match /coupons/{id} {
+      allow get: if true;
+      allow list, write: if isAdmin();
+    }
+
+    // Everything else is private.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
